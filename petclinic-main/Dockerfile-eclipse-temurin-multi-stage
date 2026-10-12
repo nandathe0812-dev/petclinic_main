@@ -1,0 +1,29 @@
+
+FROM eclipse-temurin:21-jdk-alpine AS builder
+
+WORKDIR /app
+
+COPY .mvn/ .mvn
+COPY mvnw pom.xml ./
+
+RUN chmod +x mvnw
+
+COPY src src
+
+FROM builder AS package
+
+WORKDIR /app
+
+RUN ./mvnw clean package -DskipTests
+
+FROM eclipse-temurin:21-jre-alpine AS final
+
+WORKDIR /app
+
+EXPOSE 8080
+
+COPY --from=package /app/target/*.jar /app/app.jar
+
+RUN rm -rf src .mvn mvnw pom.xml target
+
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]

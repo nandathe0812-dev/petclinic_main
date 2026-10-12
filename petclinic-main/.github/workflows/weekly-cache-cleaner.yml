@@ -1,0 +1,22 @@
+name: Weekly Cache Cleanup
+
+on:
+  schedule:
+    - cron: '0 2 * * 0'  # Every Sunday at 2 AM UTC
+  workflow_dispatch:
+
+jobs:
+  clear-cache:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+
+    steps:
+      - name: Clear old caches
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api repos/${{ github.repository }}/actions/caches \
+            --jq '.actions_caches[].id' | \
+          xargs -I {} gh api --method DELETE repos/${{ github.repository }}/actions/caches/{}
